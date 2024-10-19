@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -29,14 +29,10 @@ export class UsersService {
     const cookie = req.cookies['token'];
 
     if (!cookie) {
-      return null;
+      throw new UnauthorizedException();
     }
 
     const data = await this.jwtService.verifyAsync(cookie);
-
-    if (!data) {
-      return null;
-    }
 
     return data;
   }

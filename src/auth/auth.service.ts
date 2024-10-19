@@ -54,13 +54,13 @@ export class AuthService {
     });
 
     if (!exists) {
-      return new NotFoundException('User not found');
+      throw new NotFoundException('رقم الطالب و كلمة السر غير متطابقان');
     }
 
-    const isMatch = await bcrypt.compare(credentials.password, exists.password);
+    const isMatch = bcrypt.compareSync(credentials.password, exists.password);
 
     if (!isMatch) {
-      return new BadRequestException('رقم الطالب او كلمة المرور غير صحيحة');
+      throw new BadRequestException('رقم الطالب و كلمة السر غير متطابقان');
     }
 
     const { password, ...userWithoutPassword } = exists;
@@ -71,10 +71,6 @@ export class AuthService {
 
     const token = await this.jwtService.signAsync(payload);
 
-    return res
-      .cookie('token', token, {
-        httpOnly: true,
-      })
-      .send({ messaeg: 'تم تسجيل الدخول بنجاح' });
+    return res.json({ token, message: 'تم تسجيل الدخول بنجاح' });
   }
 }
