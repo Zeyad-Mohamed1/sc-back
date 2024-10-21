@@ -71,6 +71,10 @@ export class AuthService {
 
     const token = await this.jwtService.signAsync(payload);
 
+    res.cookie('token', token, {
+      httpOnly: true,
+    });
+
     return res.json({ token, message: 'تم تسجيل الدخول بنجاح' });
   }
 }
