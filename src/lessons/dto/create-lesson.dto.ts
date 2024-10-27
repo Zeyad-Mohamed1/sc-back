@@ -15,8 +15,4 @@ export class CreateLessonDto {
   @IsNotEmpty({ message: 'يجب ادخال الصورة' })
   @IsString({ message: 'يجب ادخال الصورة بصيغة صحيحة' })
   image: string;
-
-  @IsNotEmpty({ message: 'يجب ادخال الملفات' })
-  @IsArray({ message: 'يجب ادخال الملفات بصيغة صحيحة' })
-  pdf: string[];
 }

@@ -42,7 +42,7 @@ export class AuthService {
         data: user,
       });
 
-      return { message: 'User created successfully' };
+      return { message: 'تم إنشاء الحساب بنجاح' };
     } catch (error) {
       return new BadRequestException(error);
     }

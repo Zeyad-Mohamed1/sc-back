@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AdminService } from './admin.service';
+import { AdminService, CreatePdfDto } from './admin.service';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { CreateYearDto } from 'src/years/dto/create-year.dto';
 import { UpdateYearDto } from 'src/years/dto/update-year.dto';
@@ -25,9 +25,13 @@ export class AdminController {
 
   // Start Users //////////////////////////////////////////////////////
   @Get('users')
-  async getAllUsers(@Query('page') page: string) {
+  async getAllUsers(
+    @Query('page') page: string,
+    @Query('year') year: string,
+    @Query('query') query: string,
+  ) {
     if (!page) page = '1';
-    return await this.adminService.getAllUsers(+page);
+    return await this.adminService.getAllUsers(+page, query, year);
   }
 
   @Delete('user/:id')
@@ -115,6 +119,21 @@ export class AdminController {
     return this.adminService.createLesson(createLessonDto, courseId);
   }
 
+  @Post('lesson/pdf/:id')
+  addPdfToLesson(@Param('id') id: string, @Body() createPdfDto: CreatePdfDto) {
+    return this.adminService.addPdf(id, createPdfDto);
+  }
+
+  @Get('lesson/pdf/:id')
+  async getPdf(@Param('id') id: string) {
+    return this.adminService.getPfd(id);
+  }
+
+  @Delete('lesson/pdf/:id')
+  async deletePdf(@Param('id') id: string) {
+    return await this.adminService.deletePdf(id);
+  }
+
   @Patch('lesson/:id')
   updateLesson(
     @Param('id') id: string,
@@ -123,7 +142,7 @@ export class AdminController {
     return this.adminService.updateLesson(id, updateLessonDto);
   }
 
-  @Patch('lesson/published/:id')
+  @Patch('lesson/publish/:id')
   changePublished(@Param('id') id: string) {
     return this.adminService.changePublishedForLesson(id);
   }

@@ -12,12 +12,21 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateYearDto } from 'src/years/dto/create-year.dto';
 import { UpdateYearDto } from 'src/years/dto/update-year.dto';
 
+export type CreatePdfDto = {
+  name: string;
+  url: string;
+};
+
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   // Start USer //////////////////////////////////////////////
-  async getAllUsers(page: number): Promise<{
+  async getAllUsers(
+    page: number,
+    query?: string,
+    year?: string,
+  ): Promise<{
     users: User[];
     totalPages: number;
     usersOnCurrentPage: number;
@@ -25,12 +34,28 @@ export class AdminService {
     try {
       const USERS_PER_PAGE = 20;
 
-      // Get the total count of users
-      const totalUsers = await this.prisma.user.count();
+      // Build the query conditions
+      const whereClause: any = {};
+      if (query) {
+        whereClause.OR = [
+          { firstName: { contains: query, mode: 'insensitive' } }, // Assuming users have a 'name' field
+          { studentNumber: { contains: query, mode: 'insensitive' } }, // Assuming users have an 'email' field
+        ];
+      }
+      if (year) {
+        whereClause.yearOfStudy = year;
+      }
+
+      // Get the total count of users based on the query
+      const totalUsers = await this.prisma.user.count({
+        where: whereClause,
+      });
+
       const totalPages = Math.ceil(totalUsers / USERS_PER_PAGE);
 
-      // Fetch the paginated users
+      // Fetch the paginated users based on the query
       const users = await this.prisma.user.findMany({
+        where: whereClause,
         skip: (page - 1) * USERS_PER_PAGE,
         take: USERS_PER_PAGE,
         orderBy: {
@@ -52,13 +77,24 @@ export class AdminService {
   }
 
   async deleteUser(id: string) {
-    const user = await this.prisma.user.delete({
+    // Check if user exists
+    const user = await this.prisma.user.findFirst({
       where: { id },
     });
 
     if (!user) {
       throw new NotFoundException('المستخدم غير موجود بالفعل');
     }
+
+    // Delete related CoursesOfUsers records
+    await this.prisma.coursesOfUsers.deleteMany({
+      where: { userId: id },
+    });
+
+    // Now delete the user
+    await this.prisma.user.delete({
+      where: { id },
+    });
 
     return { message: 'تم حذف المستخدم بنجاح' };
   }
@@ -231,13 +267,18 @@ export class AdminService {
       },
     });
 
+    console.log(createCourseDto);
+
     if (!year) {
       throw new NotFoundException('السنة غير موجودة');
     }
 
     const course = await this.prisma.course.create({
       data: {
-        ...createCourseDto,
+        name: createCourseDto.name,
+        description: createCourseDto.description,
+        image: createCourseDto.image,
+        price: Number(createCourseDto.price),
         CoursesOfYear: {
           create: {
             year: {
@@ -395,13 +436,80 @@ export class AdminService {
     const lesson = await this.prisma.lesson.create({
       data: {
         ...createLessonDto,
-        course: { connect: { id: courseId } },
+        course: {
+          connect: {
+            id: courseId,
+          },
+        },
+      },
+      include: {
+        pdf: true,
       },
     });
 
     return {
       message: 'تم اضافة الدرس بنجاح',
     };
+  }
+
+  async deletePdf(id: string) {
+    const pdf = await this.prisma.pdf.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!pdf) {
+      throw new NotFoundException('الدرس غير موجود');
+    }
+
+    await this.prisma.pdf.delete({
+      where: {
+        id,
+      },
+    });
+
+    return {
+      message: 'تم حذف الدرس بنجاح',
+    };
+  }
+
+  async addPdf(lessonId: string, createPdfDto: CreatePdfDto) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: {
+        id: lessonId,
+      },
+    });
+
+    if (!lesson) {
+      throw new NotFoundException('الدرس غير موجود');
+    }
+
+    const pdf = await this.prisma.pdf.create({
+      data: {
+        name: createPdfDto.name,
+        url: createPdfDto.url,
+        lessonId: lessonId,
+      },
+    });
+
+    return {
+      message: 'تم اضافة الملف بنجاح',
+    };
+  }
+
+  async getPfd(lessonId: string) {
+    const pdf = await this.prisma.pdf.findMany({
+      where: {
+        lessonId,
+      },
+    });
+
+    if (!pdf) {
+      throw new NotFoundException('لا يوجد ملفات لهذا الدرس');
+    }
+
+    return pdf;
   }
 
   async updateLesson(id: string, updateLessonDto: UpdateLessonDto) {
@@ -415,11 +523,14 @@ export class AdminService {
       throw new NotFoundException('الدرس غير موجود');
     }
 
+    // Update lesson details
     const updatedLesson = await this.prisma.lesson.update({
       where: {
         id,
       },
-      data: updateLessonDto,
+      data: {
+        ...updateLessonDto,
+      },
     });
 
     return {
@@ -432,12 +543,25 @@ export class AdminService {
       where: {
         id,
       },
+      include: {
+        pdf: true, // Include PDFs to get their IDs
+      },
     });
 
     if (!lesson) {
       throw new NotFoundException('الدرس غير موجود بالفعل');
     }
 
+    // Delete associated PDFs if they exist
+    if (lesson.pdf.length > 0) {
+      await this.prisma.pdf.deleteMany({
+        where: {
+          lessonId: id, // Assuming lessonId is the foreign key in Pdf table
+        },
+      });
+    }
+
+    // Now delete the lesson
     await this.prisma.lesson.delete({
       where: {
         id,

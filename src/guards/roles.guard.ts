@@ -21,14 +21,19 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException('برجاء تسجيل الدخول اولا');
     }
 
-    return this.jwtService.verifyAsync(cookie).then((user) => {
-      if (user?.isAdmin) {
-        return true;
-      } else {
-        throw new UnauthorizedException(
-          'لا يمكن الوصول لهذه البيانات غير بواسطة الادمن',
-        );
-      }
-    });
+    return this.jwtService
+      .verifyAsync(cookie)
+      .then((user) => {
+        if (user?.isAdmin) {
+          return true;
+        } else {
+          throw new UnauthorizedException(
+            'لا يمكن الوصول لهذه البيانات غير بواسطة الادمن',
+          );
+        }
+      })
+      .catch(() => {
+        throw new UnauthorizedException('برجاء تسجيل الدخول اولا');
+      });
   }
 }
