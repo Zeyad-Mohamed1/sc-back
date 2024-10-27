@@ -60,7 +60,7 @@ model Lesson {
   description String
   video       String
   image       String
-  pdfs        Pdf[]
+  pdf         Pdf[]
   isFree      Boolean  @default(false)
   course      Course   @relation(fields: [courseId], references: [id])
   courseId    String

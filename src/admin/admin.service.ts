@@ -553,7 +553,7 @@ export class AdminService {
     }
 
     // Delete associated PDFs if they exist
-    if (lesson.pdf.length > 0) {
+    if (lesson?.pdf.length > 0) {
       await this.prisma.pdf.deleteMany({
         where: {
           lessonId: id, // Assuming lessonId is the foreign key in Pdf table
