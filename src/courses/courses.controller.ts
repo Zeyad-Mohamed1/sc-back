@@ -15,8 +15,8 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  @Get(':yearId')
-  findAllCoursesForUser(@Param('yearId') yearId: string) {
-    return this.coursesService.findAllCoursesForUser(yearId);
+  @Get(':yearName')
+  findAllCoursesForUser(@Param('yearName') yearName: string) {
+    return this.coursesService.findAllCoursesForUser(yearName);
   }
 }

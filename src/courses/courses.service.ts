@@ -1,26 +1,40 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAllCoursesForUser(yearId: string) {
-    const course = await this.prisma.course.findMany({
+  async findAllCoursesForUser(yearName: string) {
+    const yearWithCourses = await this.prisma.year.findUnique({
       where: {
-        isActive: true,
+        name: yearName,
+      },
+      include: {
         CoursesOfYear: {
-          some: {
-            yearId,
+          include: {
+            course: true,
           },
         },
       },
     });
 
-    if (!course || course.length === 0) {
-      throw new NotFoundException('لا يوجد كورسات متاحة');
+    if (!yearWithCourses) {
+      throw new BadRequestException(`هذا العام غير موجود`);
     }
 
-    return course;
+    const activeCourses = yearWithCourses.CoursesOfYear.filter(
+      (c) => c.course.isActive,
+    ).map((c) => c.course);
+
+    if (activeCourses.length === 0 || !activeCourses) {
+      throw new NotFoundException(`لا يوجد كورسات متاحة ل${yearName}`);
+    }
+
+    return activeCourses;
   }
 }
