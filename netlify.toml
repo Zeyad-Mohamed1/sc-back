@@ -1,7 +1,0 @@
-[functions]
-    path = "functions"
-    
-[[redirects]]
-    from = "/*"
-    to = "src/main.ts"
-    status = 200
