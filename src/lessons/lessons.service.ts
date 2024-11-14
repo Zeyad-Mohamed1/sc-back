@@ -26,6 +26,10 @@ export class LessonsService {
       where: {
         id,
       },
+      include: {
+        pdf: true,
+        video: true,
+      },
     });
 
     if (!lesson) {

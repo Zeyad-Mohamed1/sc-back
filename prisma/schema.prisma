@@ -58,12 +58,23 @@ model Lesson {
   id          String   @id @default(uuid())
   name        String
   description String
-  video       String
+  video       Video[]
   image       String
   pdf         Pdf[]
   isFree      Boolean  @default(false)
   course      Course   @relation(fields: [courseId], references: [id])
   courseId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Video {
+  id          String   @id @default(uuid())
+  name        String
+  url         String
+  description String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id])
+  lessonId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

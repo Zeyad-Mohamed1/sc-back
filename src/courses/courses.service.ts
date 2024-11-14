@@ -32,9 +32,27 @@ export class CoursesService {
     ).map((c) => c.course);
 
     if (activeCourses.length === 0 || !activeCourses) {
-      throw new NotFoundException(`لا يوجد كورسات متاحة ل${yearName}`);
+      throw new NotFoundException(`لا يوجد كورسات متاحة في سنة ${yearName}`);
     }
 
     return activeCourses;
+  }
+
+  async findCoursewithLessons(id: string) {
+    const course = await this.prisma.course.findUnique({
+      where: {
+        id,
+        isActive: true,
+      },
+      include: {
+        lessons: true,
+      },
+    });
+
+    if (!course) {
+      throw new BadRequestException(`هذا الكورس غير موجود`);
+    }
+
+    return course;
   }
 }

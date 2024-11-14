@@ -26,6 +26,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { studentNumber },
     });
+
     return user;
   }
 
@@ -36,35 +37,81 @@ export class UsersService {
       throw new UnauthorizedException();
     }
 
-    const data = await this.jwtService.verifyAsync(cookie);
+    const data = await this.jwtService.decode(cookie);
 
-    return data;
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
+    if (!data) {
+      throw new UnauthorizedException('برجاء تسجيل الدخول اولا');
+    }
+
+    if (data.exp < currentTime) {
+      throw new UnauthorizedException(
+        'تم انتهاء صلاحية الجلسة. الرجاء تسجيل الدخول مجددا',
+      );
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: data.id },
+    });
+
+    return user;
   }
 
-  async getPurchasedCourses(userId: string) {
-    if (!userId || userId === '') {
-      throw new UnauthorizedException('يجب تسجيل الدخول اولا');
+  async getPurchasedCourses(req: Request) {
+    const cookie = req.cookies['token'];
+
+    if (!cookie) {
+      throw new UnauthorizedException();
     }
-    // Step 1: Retrieve the courses owned by the user
+
+    const data = await this.jwtService.decode(cookie);
+
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
+    if (!data) {
+      throw new UnauthorizedException('برجاء تسجيل الدخول اولا');
+    }
+
+    if (data.exp < currentTime) {
+      throw new UnauthorizedException(
+        'تم انتهاء صلاحية الجلسة. الرجاء تسجيل الدخول مجددا',
+      );
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: data.id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('المستخدم غير موجود');
+    }
+
+    // Fetch courses associated with the user
     const userCourses = await this.prisma.coursesOfUsers.findMany({
       where: {
-        userId: userId,
+        userId: user.id,
       },
       include: {
         course: true, // Include course details
       },
     });
 
+    // Check if the user has any purchased courses
     if (!userCourses || userCourses.length === 0) {
       throw new NotFoundException('لا يوجد كورسات تم شرائها');
     }
 
-    // Step 2: Format the purchased courses for display
-    const purchasedCourses = userCourses.map((uc) => ({
-      id: uc.course.id,
+    // Return only the course details, if you want to return a simplified response
+    return userCourses.map(({ course }) => ({
+      id: course.id,
+      name: course.name,
+      description: course.description,
+      price: course.price,
+      image: course.image,
+      isActive: course.isActive,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
     }));
-
-    // Step 3: Return the purchased courses
-    return purchasedCourses;
   }
 }

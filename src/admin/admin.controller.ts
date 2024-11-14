@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AdminService, CreatePdfDto } from './admin.service';
+import { AdminService, CreatePdfDto, CreateVideoDto } from './admin.service';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { CreateYearDto } from 'src/years/dto/create-year.dto';
 import { UpdateYearDto } from 'src/years/dto/update-year.dto';
@@ -122,6 +122,24 @@ export class AdminController {
   @Post('lesson/pdf/:id')
   addPdfToLesson(@Param('id') id: string, @Body() createPdfDto: CreatePdfDto) {
     return this.adminService.addPdf(id, createPdfDto);
+  }
+
+  @Post('/:id/videos')
+  addVideoToLesson(
+    @Param('id') id: string,
+    @Body() createVideoDto: CreateVideoDto,
+  ) {
+    return this.adminService.addVideo(id, createVideoDto);
+  }
+
+  @Get('/:id/videos')
+  getvideos(@Param('id') id: string) {
+    return this.adminService.findAllVideosLessonForAdmin(id);
+  }
+
+  @Delete('/videos/:videoId')
+  deleteVideo(@Param('videoId') videoId: string) {
+    return this.adminService.deleteVideo(videoId);
   }
 
   @Get('lesson/pdf/:id')

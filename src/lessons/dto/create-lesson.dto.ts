@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateLessonDto {
   @IsNotEmpty({ message: 'يجب ادخال الاسم' })
   @IsString({ message: 'يجب ادخال الاسم بصيغة صحيحة' })
@@ -8,9 +8,8 @@ export class CreateLessonDto {
   @IsString({ message: 'يجب ادخال الوصف بصيغة صحيحة' })
   description: string;
 
-  @IsNotEmpty({ message: 'يجب ادخال الفيديو' })
-  @IsString({ message: 'يجب ادخال الفيديو بصيغة صحيحة' })
-  video: string;
+  @IsOptional()
+  video?: { name: string; url: string; description: string }[];
 
   @IsNotEmpty({ message: 'يجب ادخال الصورة' })
   @IsString({ message: 'يجب ادخال الصورة بصيغة صحيحة' })

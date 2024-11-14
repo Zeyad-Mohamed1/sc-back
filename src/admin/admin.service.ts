@@ -17,6 +17,12 @@ export type CreatePdfDto = {
   url: string;
 };
 
+export type CreateVideoDto = {
+  name: string;
+  url: string;
+  description: string;
+};
+
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
@@ -433,6 +439,7 @@ export class AdminService {
       throw new NotFoundException('الكورس غير موجود');
     }
 
+    // Create the lesson
     const lesson = await this.prisma.lesson.create({
       data: {
         ...createLessonDto,
@@ -441,14 +448,88 @@ export class AdminService {
             id: courseId,
           },
         },
+        ...(createLessonDto.video && {
+          video: {
+            createMany: {
+              data: createLessonDto.video.map((video) => ({
+                name: video.name,
+                url: video.url,
+                description: video.description,
+              })),
+            },
+          },
+        }),
       },
       include: {
         pdf: true,
+        video: true,
       },
     });
 
     return {
       message: 'تم اضافة الدرس بنجاح',
+      lesson, // Optionally return the created lesson with videos
+    };
+  }
+
+  async addVideo(lessonId: string, createVideoDto: CreateVideoDto) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: {
+        id: lessonId,
+      },
+    });
+
+    if (!lesson) {
+      throw new NotFoundException('الدرس غير موجود');
+    }
+
+    const video = await this.prisma.video.create({
+      data: {
+        name: createVideoDto.name,
+        url: createVideoDto.url,
+        description: createVideoDto.description,
+        lessonId,
+      },
+    });
+
+    return {
+      message: 'تم اضافة الفيديو بنجاح',
+    };
+  }
+
+  async findAllVideosLessonForAdmin(lessonId: string) {
+    const lesson = await this.prisma.video.findMany({
+      where: {
+        lessonId,
+      },
+    });
+
+    if (!lesson || lesson.length === 0) {
+      throw new NotFoundException('لا يوجد فيديوهات متاحة');
+    }
+
+    return lesson;
+  }
+
+  async deleteVideo(id: string) {
+    const video = await this.prisma.video.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!video) {
+      throw new NotFoundException('الدرس غير موجود');
+    }
+
+    await this.prisma.video.delete({
+      where: {
+        id,
+      },
+    });
+
+    return {
+      message: 'تم حذف الفيديو بنجاح',
     };
   }
 
@@ -524,14 +605,14 @@ export class AdminService {
     }
 
     // Update lesson details
-    const updatedLesson = await this.prisma.lesson.update({
-      where: {
-        id,
-      },
-      data: {
-        ...updateLessonDto,
-      },
-    });
+    // const updatedLesson = await this.prisma.lesson.update({
+    //   where: {
+    //     id,
+    //   },
+    //   data: {
+    //     ...updateLessonDto,
+    //   },
+    // });
 
     return {
       message: 'تم تحديث الدرس بنجاح',

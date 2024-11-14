@@ -21,8 +21,7 @@ export class UsersController {
   }
 
   @Get('courses')
-  async getUserCourses(@Query('userId') userId: string) {
-    if (!userId) userId = '';
-    return await this.usersService.getPurchasedCourses(userId);
+  async getUserCourses(@Req() req: Request) {
+    return await this.usersService.getPurchasedCourses(req);
   }
 }
