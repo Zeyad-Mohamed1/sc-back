@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
+import { doubleCsrf } from 'csrf-csrf';
 import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +15,7 @@ async function bootstrap() {
   app.use(express.json({ limit: '10kb' }));
 
   app.enableCors({
-    origin: '*',
+    origin: 'https://salwachemistry.com',
     credentials: true,
   });
 

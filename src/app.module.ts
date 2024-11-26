@@ -8,9 +8,25 @@ import { YearsModule } from './years/years.module';
 import { CoursesModule } from './courses/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { AdminModule } from './admin/admin.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
-  imports: [AuthModule, UsersModule, YearsModule, CoursesModule, LessonsModule, AdminModule],
+  imports: [
+    AuthModule,
+    UsersModule,
+    YearsModule,
+    CoursesModule,
+    LessonsModule,
+    AdminModule,
+    PaymentsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 5,
+      },
+    ]),
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
