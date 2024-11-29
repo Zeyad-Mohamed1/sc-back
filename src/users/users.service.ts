@@ -17,9 +17,13 @@ export class UsersService {
   ) {}
 
   async hashPassword(password: string): Promise<string> {
-    const saltOrRounds = 10;
-    const hash = await bcrypt.hash(password, saltOrRounds);
-    return hash;
+    try {
+      const saltOrRounds = 10;
+      const hash = await bcrypt.hashSync(password, saltOrRounds);
+      return hash;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async getUser({ studentNumber }: { studentNumber: string }): Promise<User> {

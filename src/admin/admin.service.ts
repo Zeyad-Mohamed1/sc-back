@@ -9,6 +9,7 @@ import { UpdateCourseDto } from 'src/courses/dto/update-course.dto';
 import { CreateLessonDto } from 'src/lessons/dto/create-lesson.dto';
 import { UpdateLessonDto } from 'src/lessons/dto/update-lesson.dto';
 import { PrismaService } from 'src/prisma.service';
+import { UsersService } from 'src/users/users.service';
 import { CreateYearDto } from 'src/years/dto/create-year.dto';
 import { UpdateYearDto } from 'src/years/dto/update-year.dto';
 
@@ -25,7 +26,10 @@ export type CreateVideoDto = {
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private usersService: UsersService,
+  ) {}
 
   // Start USer //////////////////////////////////////////////
   async getAllUsers(
@@ -103,6 +107,106 @@ export class AdminService {
     });
 
     return { message: 'تم حذف المستخدم بنجاح' };
+  }
+
+  async updatePasswordForUser({
+    id,
+    password,
+  }: {
+    id: string;
+    password: string;
+  }) {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: { id },
+      });
+
+      if (!user) {
+        throw new NotFoundException('المستخدم غير موجود بالفعل');
+      }
+
+      const hashedPassword = await this.usersService.hashPassword(password);
+
+      await this.prisma.user.update({
+        where: { id },
+        data: { password: hashedPassword },
+      });
+
+      return { message: 'تم تغيير كلمة المرور بنجاح' };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getStatistics() {
+    try {
+      const totalUsers = await this.prisma.user.count();
+      const totalCourses = await this.prisma.course.count();
+      const totalLessons = await this.prisma.lesson.count();
+      const totalYears = await this.prisma.year.count();
+
+      return {
+        totalUsers,
+        totalCourses,
+        totalLessons,
+        totalYears,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getCoursesForUser(id: string) {
+    const courses = await this.prisma.coursesOfUsers.findMany({
+      where: { userId: id },
+      include: { course: true },
+    });
+
+    if (!courses || courses.length === 0) {
+      throw new NotFoundException('لا يوجد كورسات لهذا المستخدم');
+    }
+
+    return courses;
+  }
+
+  async addCourseForUser({
+    userId,
+    courseId,
+  }: {
+    userId: string;
+    courseId: string;
+  }) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException('الكورس غير موجود');
+    }
+
+    const exists = await this.prisma.coursesOfUsers.findFirst({
+      where: { userId, courseId },
+    });
+
+    if (exists) {
+      throw new BadRequestException('الكورس موجود بالفعل لهذا المستخدم');
+    }
+
+    await this.prisma.coursesOfUsers.create({
+      data: {
+        userId,
+        courseId,
+      },
+    });
+
+    return { message: 'تم اضافة الكورس للمستخدم بنجاح' };
+  }
+
+  async removeCourseForUser({ id }: { id: string }) {
+    await this.prisma.coursesOfUsers.deleteMany({
+      where: { id },
+    });
+    return { message: 'تم حذف الكورس من المستخدم بنجاح' };
   }
   // End USer //////////////////////////////////////////////
 
@@ -605,14 +709,16 @@ export class AdminService {
     }
 
     // Update lesson details
-    // const updatedLesson = await this.prisma.lesson.update({
-    //   where: {
-    //     id,
-    //   },
-    //   data: {
-    //     ...updateLessonDto,
-    //   },
-    // });
+    const updatedLesson = await this.prisma.lesson.update({
+      where: {
+        id,
+      },
+      data: {
+        name: updateLessonDto.name,
+        description: updateLessonDto.description,
+        image: updateLessonDto.image,
+      },
+    });
 
     return {
       message: 'تم تحديث الدرس بنجاح',

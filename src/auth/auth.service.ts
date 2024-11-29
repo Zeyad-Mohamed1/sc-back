@@ -63,13 +63,18 @@ export class AuthService {
       throw new BadRequestException('رقم الطالب و كلمة السر غير متطابقان');
     }
 
-    const { password, ...userWithoutPassword } = exists;
+    const { password, token: tokens, ...userWithoutPassword } = exists;
 
     const payload = {
       ...userWithoutPassword,
     };
 
     const token = await this.jwtService.signAsync(payload);
+
+    await this.prisma.user.update({
+      where: { id: exists.id },
+      data: { token: token },
+    });
 
     res.cookie('token', token, {
       httpOnly: true,

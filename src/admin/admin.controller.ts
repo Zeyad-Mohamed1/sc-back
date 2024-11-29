@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -37,6 +38,37 @@ export class AdminController {
   @Delete('user/:id')
   async deleteUser(@Param('id') id: string) {
     return await this.adminService.deleteUser(id);
+  }
+
+  @Patch('user/:id/password')
+  async updatePasswordForUser(
+    @Param('id') id: string,
+    @Body('password') password: string,
+  ) {
+    return await this.adminService.updatePasswordForUser({ id, password });
+  }
+
+  @Get('statistics')
+  async getStatistics() {
+    return await this.adminService.getStatistics();
+  }
+
+  @Get('usercourses/:id')
+  async getUserCourses(@Param('id') id: string) {
+    return await this.adminService.getCoursesForUser(id);
+  }
+
+  @Post('/addcourse/:userId/:courseId')
+  async addCourseForUser(
+    @Param('userId') userId: string,
+    @Param('courseId') courseId: string,
+  ) {
+    return await this.adminService.addCourseForUser({ userId, courseId });
+  }
+
+  @Delete('/removecourse/:id')
+  async removeCourseForUser(@Param('id') id: string) {
+    return await this.adminService.removeCourseForUser({ id });
   }
   // End Users ////////////////////////////////////////////////////////
 
