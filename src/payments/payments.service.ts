@@ -6,21 +6,6 @@ import { PrismaService } from 'src/prisma.service';
 @Injectable()
 export class PaymentsService {
   constructor(private readonly prisma: PrismaService) {}
-  // الحصول على Token من Paymob
-  async getAuthToken(): Promise<string> {
-    try {
-      const response = await axios.post(
-        `${process.env.PAYMOB_BASE_URL}/api/auth/tokens`,
-        {
-          api_key: `${process.env.PAYMOB_API_KEY}`,
-        },
-      );
-      return response.data.token;
-    } catch (error) {
-      console.log(error);
-      throw new HttpException('Failed to authenticate with Paymob', 500);
-    }
-  }
 
   // إنشاء طلب دفع
   async createPayment(
@@ -32,16 +17,6 @@ export class PaymentsService {
     name: string,
     course_id: string,
   ) {
-    console.log(
-      amount,
-      first_name,
-      last_name,
-      email,
-      phone_number,
-      name,
-      course_id,
-    );
-
     try {
       const parsedAmount = parseFloat(amount) * 100;
 
@@ -50,7 +25,7 @@ export class PaymentsService {
         {
           amount: parsedAmount,
           currency: 'EGP',
-          payment_methods: [4882590, 'card'],
+          payment_methods: [4888275, 4888277, 4888276],
           items: [
             {
               name,
@@ -67,8 +42,6 @@ export class PaymentsService {
             studentNumber: phone_number,
           },
           expiration: 3600,
-          notification_url:
-            'https://9319-197-55-127-26.ngrok-free.app/api/v1/payment/callback',
         },
         {
           headers: {
