@@ -28,8 +28,16 @@ export class LessonsService {
         id,
       },
       include: {
-        pdf: true,
-        video: true,
+        pdf: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+        video: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
       },
     });
 
