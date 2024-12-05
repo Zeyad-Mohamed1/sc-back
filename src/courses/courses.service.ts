@@ -19,6 +19,9 @@ export class CoursesService {
           include: {
             course: true,
           },
+          orderBy: {
+            createdAt: 'asc',
+          },
         },
       },
     });
@@ -45,7 +48,11 @@ export class CoursesService {
         isActive: true,
       },
       include: {
-        lessons: true,
+        lessons: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
       },
     });
 

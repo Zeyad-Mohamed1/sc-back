@@ -16,6 +16,9 @@ export class YearsService {
       where: {
         isActive: true,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
     if (!years || years.length === 0) {

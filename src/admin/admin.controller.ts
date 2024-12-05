@@ -10,7 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AdminService, CreatePdfDto, CreateVideoDto } from './admin.service';
+import {
+  AdminService,
+  CreatePdfDto,
+  CreateVideoDto,
+  UpdateVideoDto,
+} from './admin.service';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { CreateYearDto } from 'src/years/dto/create-year.dto';
 import { UpdateYearDto } from 'src/years/dto/update-year.dto';
@@ -202,5 +207,14 @@ export class AdminController {
     return this.adminService.removeLesson(id);
   }
 
+  @Get('lesson/video/:id')
+  getVideo(@Param('id') id: string) {
+    return this.adminService.getSingleVideo(id);
+  }
+
+  @Patch('lesson/video/:id')
+  updateVideo(@Param('id') id: string, @Body() updateVideoDto: UpdateVideoDto) {
+    return this.adminService.updateVideo(id, updateVideoDto);
+  }
   // End Lessons //////////////////////////////////////////////////////
 }

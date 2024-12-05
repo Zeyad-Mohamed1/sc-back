@@ -1,6 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
-import { log } from 'console';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
@@ -25,7 +24,7 @@ export class PaymentsService {
         {
           amount: parsedAmount,
           currency: 'EGP',
-          payment_methods: [4888275, 4888277, 4888276],
+          payment_methods: [4880904, 4880905],
           items: [
             {
               name,

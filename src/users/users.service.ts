@@ -99,6 +99,9 @@ export class UsersService {
       include: {
         course: true, // Include course details
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
     // Check if the user has any purchased courses

@@ -24,6 +24,12 @@ export type CreateVideoDto = {
   description: string;
 };
 
+export type UpdateVideoDto = {
+  name?: string;
+  url?: string;
+  description?: string;
+};
+
 @Injectable()
 export class AdminService {
   constructor(
@@ -160,6 +166,7 @@ export class AdminService {
     const courses = await this.prisma.coursesOfUsers.findMany({
       where: { userId: id },
       include: { course: true },
+      orderBy: { createdAt: 'asc' },
     });
 
     if (!courses || courses.length === 0) {
@@ -235,7 +242,9 @@ export class AdminService {
   }
 
   async findAllYearsForAdmin() {
-    const years = await this.prisma.year.findMany();
+    const years = await this.prisma.year.findMany({
+      orderBy: { createdAt: 'asc' },
+    });
 
     if (!years || years.length === 0) {
       throw new NotFoundException('لا يوجد سنين متاحة لعرضها');
@@ -414,6 +423,9 @@ export class AdminService {
             yearId,
           },
         },
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
 
@@ -601,10 +613,52 @@ export class AdminService {
     };
   }
 
+  async getSingleVideo(id: string) {
+    const video = await this.prisma.video.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!video) {
+      throw new NotFoundException('الفيديو غير موجود');
+    }
+
+    return video;
+  }
+
+  async updateVideo(id: string, updateVideoDto: UpdateVideoDto) {
+    const video = await this.prisma.video.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!video) {
+      throw new NotFoundException('الفيديو غير موجود');
+    }
+
+    await this.prisma.video.update({
+      where: {
+        id,
+      },
+      data: {
+        ...updateVideoDto,
+      },
+    });
+
+    return {
+      message: 'تم تحديث الفيديو بنجاح',
+    };
+  }
+
   async findAllVideosLessonForAdmin(lessonId: string) {
     const lesson = await this.prisma.video.findMany({
       where: {
         lessonId,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
 
@@ -687,6 +741,9 @@ export class AdminService {
     const pdf = await this.prisma.pdf.findMany({
       where: {
         lessonId,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
 

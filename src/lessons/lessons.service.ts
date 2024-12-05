@@ -1,6 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateLessonDto } from './dto/create-lesson.dto';
-import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
@@ -11,6 +9,9 @@ export class LessonsService {
     const lessons = await this.prisma.lesson.findMany({
       where: {
         courseId,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
 
